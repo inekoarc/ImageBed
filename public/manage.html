@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片管理 - ImageBed 图床</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>📸 ImageBed 图床</h1>
+    <nav>
+      <a href="/">上传图片</a>
+      <a href="/manage.html" class="active">图片管理</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="manage-container">
+      <div class="manage-header">
+        <h2>图片列表</h2>
+        <span class="image-count" id="imageCount">共 0 张</span>
+      </div>
+      <div class="image-grid" id="imageGrid">
+        <p class="empty-state" id="emptyState">暂无图片，去 <a href="/">上传</a> 一些吧</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- 删除确认弹窗 -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="modal-content">
+      <h3>确认删除</h3>
+      <p>确定要删除这张图片吗？此操作不可撤销。</p>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelBtn">取消</button>
+        <button class="btn btn-delete" id="confirmBtn">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/manage.js"></script>
+</body>
+</html>

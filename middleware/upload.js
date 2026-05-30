@@ -1,0 +1,23 @@
+const multer = require('multer');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const config = require('../config');
+const fileFilter = require('./fileFilter');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, config.uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, uuidv4() + ext);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: config.maxFileSizeBytes },
+  fileFilter
+});
+
+module.exports = upload;
