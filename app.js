@@ -11,8 +11,22 @@ const { listImages, getImage, deleteImage } = require('./routes/images');
 
 const app = express();
 
-// 安全头
-app.use(helmet());
+// 安全头（不使用 HTTPS 时禁用 upgrade-insecure-requests）
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      formAction: ["'self'"],
+      connectSrc: ["'self'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'self'"],
+      objectSrc: ["'none'"]
+    }
+  }
+}));
 
 // 日志
 app.use(morgan('combined'));
