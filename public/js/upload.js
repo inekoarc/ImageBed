@@ -17,6 +17,7 @@ const copyUrlBtn = document.getElementById('copyUrlBtn');
 const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
 const copyHtmlBtn = document.getElementById('copyHtmlBtn');
 const resetBtn = document.getElementById('resetBtn');
+const reselectBtn = document.getElementById('reselectBtn');
 
 let selectedFile = null;
 
@@ -197,4 +198,16 @@ resetBtn.addEventListener('click', () => {
   result.hidden = true;
   progressBar.hidden = true;
   progressFill.style.width = '0%';
+});
+
+// 重新选择
+reselectBtn.addEventListener('click', () => {
+  selectedFile = null;
+  fileInput.value = '';
+  dropZone.hidden = false;
+  preview.hidden = true;
+  progressBar.hidden = true;
+  progressFill.style.width = '0%';
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = '开始上传';
 });
