@@ -75,7 +75,7 @@ async function authFetch(url, options = {}) {
 async function doLogout() {
   const res = await authFetch('/api/logout', { method: 'POST' });
   if (res) {
-    window.location.href = '/login.html';
+    window.location.href = '/';
   }
 }
 
