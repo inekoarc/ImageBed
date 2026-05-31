@@ -137,7 +137,7 @@ uploadBtn.addEventListener('click', async () => {
   try {
     // 用 XHR 实现上传进度
     const xhr = new XMLHttpRequest();
-    const result = await new Promise((resolve, reject) => {
+    const data = await new Promise((resolve, reject) => {
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
           const pct = Math.round((e.loaded / e.total) * 100);
@@ -165,8 +165,8 @@ uploadBtn.addEventListener('click', async () => {
     // 上传成功
     preview.hidden = true;
     result.hidden = false;
-    resultImage.src = result.url;
-    urlInput.value = result.url;
+    resultImage.src = data.url;
+    urlInput.value = data.url;
     progressBar.hidden = true;
     uploadBtn.disabled = false;
     uploadBtn.textContent = '上传完成 ✓';
