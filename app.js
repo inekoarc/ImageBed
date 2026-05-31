@@ -11,21 +11,9 @@ const { listImages, getImage, deleteImage } = require('./routes/images');
 
 const app = express();
 
-// 安全头（不使用 HTTPS 时禁用 upgrade-insecure-requests）
+// 安全头（HTTP 模式下禁用 CSP，避免 upgrade-insecure-requests 拦截请求）
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      formAction: ["'self'"],
-      connectSrc: ["'self'"],
-      baseUri: ["'self'"],
-      frameAncestors: ["'self'"],
-      objectSrc: ["'none'"]
-    }
-  }
+  contentSecurityPolicy: false
 }));
 
 // 日志
