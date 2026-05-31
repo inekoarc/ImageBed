@@ -1,16 +1,18 @@
-# 🏰 图床
+# 🏰 Chaldeas 图床
 
-一个简洁的图床应用，上传图片即可获得**5位短链接**，支持图片管理和密码保护。
+简洁美观的图床应用 —— 上传图片，即可获得一张可访问的短链接。支持密码保护的管理后台，以及 CLI 命令行上传。
 
 ## 功能特性
 
 - ⚡ **拖拽上传** — 支持拖拽或点击选择图片，上传前可预览、重新选择
-- 🔗 **5位短链接** — 生成 `aB3xK.jpg` 格式的短链接，简洁美观
-- 🖼️ **支持多种格式** — JPG / PNG / GIF / WebP / SVG / BMP / TIFF
+- 🔗 **5 位短链接** — 生成 `aB3xK.jpg` 格式的短链接，简洁美观
+- 🖼️ **多格式支持** — JPG / PNG / GIF / WebP / SVG / BMP / TIFF
 - 📋 **一键复制** — 支持复制原始链接、Markdown、HTML 三种格式
 - 🔒 **管理保护** — 图片管理和删除需要密码登录，上传保持公开
 - 🗑️ **图片管理** — 可视化管理所有已上传图片，支持删除
-- 🎨 **自定义图标** — 支持自定义 favicon 和页面图标
+- 🎨 **自定义图标** — Chaldeas 主题品牌图标
+- 🌐 **中文支持** — 中文文件名上传不会乱码
+- 🖥️ **CLI 工具** — 命令行上传，URL 自动复制到剪贴板
 
 ## 快速开始
 
@@ -20,7 +22,7 @@
 npm install
 ```
 
-### 2. 配置
+### 2. 配置环境变量
 
 编辑 `.env` 文件：
 
@@ -34,8 +36,8 @@ UPLOAD_DIR=./uploads
 # 最大文件大小 (MB)
 MAX_FILE_SIZE_MB=10
 
-# 你的服务器域名或 IP（返回的图片链接会以此开头）
-DOMAIN_URL=http://你的服务器IP:3000
+# 服务器地址（返回的图片链接会以此开头）
+DOMAIN_URL=https://yousama.top
 
 # 上传频率限制（15分钟内最多60次）
 RATE_LIMIT_WINDOW_MS=900000
@@ -48,7 +50,11 @@ ADMIN_PASSWORD=设置你的密码
 SESSION_SECRET=改成一个随机字符串
 ```
 
-**没有域名？** 将 `DOMAIN_URL` 设置为 `http://你的服务器IP:3000` 即可。后续有了域名再改。
+| 变量 | 说明 |
+|------|------|
+| `DOMAIN_URL` | 图片链接的域名前缀，有域名用域名，没域名用 `http://IP:3000` |
+| `ADMIN_PASSWORD` | 管理后台登录密码 |
+| `SESSION_SECRET` | 用于加密 session 的随机字符串，可用 `openssl rand -hex 32` 生成 |
 
 ### 3. 启动
 
@@ -56,95 +62,39 @@ SESSION_SECRET=改成一个随机字符串
 npm start
 ```
 
-生产环境推荐使用 PM2 后台运行：
+开发模式（文件修改自动重启）：
+
+```bash
+npm run dev
+```
+
+## 生产部署
+
+推荐使用 **Nginx 反向代理 + PM2 进程管理 + Certbot SSL** 部署。
+
+### PM2 进程管理
 
 ```bash
 npm install -g pm2
 pm2 start server.js --name chaldeas
 pm2 save
-pm2 startup          # 设置开机自启
+pm2 startup          # 开机自启
 ```
 
-## 使用说明
-
-### 上传图片
-
-1. 浏览器打开 `http://你的服务器IP:3000`
-2. 拖拽图片到上传区域，或点击选择文件
-3. 确认预览无误后点击「开始上传」（选错可点「重新选择」）
-4. 上传成功后，可以：
-   - 📋 **复制链接** — 直接复制图片 URL
-   - 📋 **复制 Markdown** — 复制 `![alt](url)` 格式
-   - 📋 **复制 HTML** — 复制 `<img src="url">` 格式
-
-### 管理图片
-
-1. 访问 `http://你的服务器IP:3000/manage.html`
-2. 输入密码登录（默认密码见 `.env` 中的 `ADMIN_PASSWORD`）
-3. 查看所有已上传图片的缩略图
-4. 点击「复制链接」快速获取 URL
-5. 点击「删除」移除不需要的图片
-
-### CLI 命令行上传
-
-安装后可用命令上传图片，URL 自动复制到剪贴板：
+常用命令：
 
 ```bash
-# 安装依赖后直接用
-node bin/imagebed 照片.jpg
-# 或指定服务器地址
-IMAGEBED_URL=http://你的服务器IP:3000 node bin/imagebed 照片.jpg
+pm2 status           # 查看状态
+pm2 logs chaldeas    # 查看日志
+pm2 restart chaldeas # 重启
 ```
 
-支持 Linux / Windows / macOS，详细用法见 `bin/imagebed`。
-
-## 公网访问 / HTTPS（二选一）
-
-### 方案 A：Cloudflare Tunnel（无域名免费方案）
-
-不需要域名，自动提供 HTTPS：
-
-```bash
-# 1. 安装 cloudflared
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
-chmod +x /usr/local/bin/cloudflared
-
-# 2. 启动隧道（指向本地图床）
-cloudflared tunnel --url http://localhost:3000
-```
-
-会输出 `https://xxx.trycloudflare.com` 地址，将 `.env` 中的 `DOMAIN_URL` 改为这个地址即可。
-
-**做成服务自动启动**：
-
-```bash
-sudo tee /etc/systemd/system/cloudflared.service << 'EOF'
-[Unit]
-Description=Cloudflare Tunnel
-[Service]
-ExecStart=/usr/local/bin/cloudflared tunnel --url http://localhost:3000
-Restart=always
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl enable --now cloudflared
-```
-
-### 方案 B：Nginx + 域名 + HTTPS（生产推荐）
-
-1. **买域名** — 腾讯云 / 阿里云，约 10~50 元/年
-2. **DNS 解析** — 添加 A 记录指向你的服务器 IP
-3. **配置 Nginx**：
-
-创建 `/etc/nginx/sites-available/chaldeas`：
+### Nginx 反向代理
 
 ```nginx
 server {
     listen 80;
-    server_name your-domain.com;
-
-    client_max_body_size 20m;
+    server_name yousama.top www.yousama.top;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -152,53 +102,64 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 20m;
     }
 }
 ```
 
-4. **启用并配置 HTTPS**：
+### HTTPS（Certbot + Let's Encrypt）
 
 ```bash
-ln -s /etc/nginx/sites-available/chaldeas /etc/nginx/sites-enabled/
-certbot --nginx -d your-domain.com
-nginx -s reload
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d yousama.top -d www.yousama.top
 ```
 
-5. **更新 `.env`**：将 `DOMAIN_URL` 改为 `https://your-domain.com`
-
-## 集成到扣子（Coze）插件
-
-### 场景
-
-在飞书多维表格中使用：一列插入图片，一列自动得到 URL。
-
-### 方法一：使用 CLI 工具手动上传
+申请后自动续期，无需手动操作：
 
 ```bash
-# 下载图片 → 上传图床 → URL 自动复制到剪贴板 → 粘贴到飞书
-node bin/imagebed 图片.jpg
+sudo certbot renew --dry-run  # 验证续期正常
 ```
 
-### 方法二：配置扣子自定义插件
+## 使用说明
 
-需要先配好 **HTTPS 公网访问**（参考上方方案 A 或 B）：
+### 上传图片
 
-1. 登录 https://www.coze.cn → 插件 → 创建自定义插件
-2. 配置 API：
+1. 浏览器打开 `https://yousama.top`
+2. 拖拽图片到上传区域，或点击选择文件
+3. 确认预览无误后点击「开始上传」（选错可点「重新选择」）
+4. 上传成功后，可以：
+   - **复制链接** — 直接复制图片 URL
+   - **复制 Markdown** — 复制 `![alt](url)` 格式
+   - **复制 HTML** — 复制 `<img src="url">` 格式
+   - 点击「继续上传」上传下一张
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/upload` | POST | 上传图片，参数 `image`（file），返回 `url` |
-| `/api/images` | GET | 获取图片列表（需登录） |
+### 管理图片
 
-3. 在 Bot 的技能中添加此插件即可使用。
+1. 访问 `https://yousama.top/manage.html`（自动跳转登录页）
+2. 输入密码登录（密码在 `.env` 的 `ADMIN_PASSWORD`）
+3. 查看所有已上传图片的缩略图
+4. 点击「复制链接」快速获取 URL
+5. 点击「删除」移除不需要的图片
+6. 使用完毕后可点击「退出登录」
 
-## API 文档
-
-### 上传图片（公开）
+### CLI 命令行上传
 
 ```bash
-curl -F "image=@photo.jpg" http://localhost:3000/api/upload
+# 上传图片，URL 自动复制到剪贴板
+node bin/imagebed 照片.jpg
+
+# 指定服务器地址（默认从 .env 读取）
+IMAGEBED_URL=https://yousama.top node bin/imagebed 照片.jpg
+```
+
+CLI 会自动读取 `.env` 中的 `DOMAIN_URL`，跨平台剪贴板支持（Windows/macOS/Linux）。
+
+### API 接口
+
+**上传图片（公开）**
+
+```bash
+curl -F "image=@照片.jpg" https://yousama.top/api/upload
 ```
 
 响应：
@@ -206,75 +167,48 @@ curl -F "image=@photo.jpg" http://localhost:3000/api/upload
 ```json
 {
   "success": true,
-  "id": "a1b2c3d4-...",
-  "filename": "aB3xK.jpg",
-  "originalName": "photo.jpg",
-  "mimeType": "image/jpeg",
-  "size": 256000,
-  "width": 1920,
-  "height": 1080,
-  "url": "http://localhost:3000/i/aB3xK.jpg",
-  "createdAt": "2026-05-30T10:00:00.000Z"
+  "url": "https://yousama.top/i/aB3xK.jpg",
+  "filename": "aB3xK.jpg"
 }
 ```
 
-### 登录
+**登录管理后台**
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"password":"你的密码"}' \
-  http://localhost:3000/api/login
+  https://yousama.top/api/login -c cookies.txt
 ```
 
-### 获取图片列表（需登录）
+**获取图片列表（需登录）**
 
 ```bash
-curl -b cookies.txt http://localhost:3000/api/images
+curl -b cookies.txt https://yousama.top/api/images
 ```
 
-### 删除图片（需登录）
+**删除图片（需登录）**
 
 ```bash
-curl -b cookies.txt -X DELETE http://localhost:3000/api/images/<id>
+curl -b cookies.txt -X DELETE https://yousama.top/api/images/<id>
 ```
 
-### 退出登录
+**退出登录**
 
 ```bash
-curl -b cookies.txt -X POST http://localhost:3000/api/logout
+curl -b cookies.txt -X POST https://yousama.top/api/logout
 ```
 
-### 访问图片（公开）
+## 技术栈
 
-`http://localhost:3000/i/<filename>`
-
-## 支持的图片格式
-
-| 格式 | 扩展名 |
-|------|--------|
-| JPEG | `.jpg` `.jpeg` |
-| PNG | `.png` |
-| GIF | `.gif` |
-| WebP | `.webp` |
-| SVG | `.svg` |
-| BMP | `.bmp` |
-| TIFF | `.tiff` `.tif` |
-
-## 技术细节
-
-### 安全特性
-
-- 文件类型双重校验（MIME 类型 + sharp 真实图片检测）
-- 5位随机文件名（62⁵ ≈ 9亿种组合），防碰撞、防路径穿越
-- 上传频率限制，防止滥用
-- 管理页面密码保护（express-session 会话管理）
-- 文件大小限制（默认 10MB，可配置）
-- 安全 HTTP 头（X-Content-Type-Options、X-Frame-Options 等）
-
-### 编码处理
-
-- 支持中文文件名上传（Latin-1 → UTF-8 编码自动转换）
-- 兼容旧版 UUID 格式文件和 5位短格式文件
+| 技术 | 用途 |
+|------|------|
+| Node.js 24 | 运行时 |
+| Express 5 | Web 框架 |
+| Multer 2.x | 文件上传处理 |
+| Sharp | 图片校验 + 元数据提取 |
+| express-session | 会话管理（24h 过期） |
+| express-rate-limit | 上传频率限制 |
+| Morgan | HTTP 请求日志 |
 
 ## 项目结构
 
@@ -301,8 +235,40 @@ curl -b cookies.txt -X POST http://localhost:3000/api/logout
 │   ├── login.html         # 登录页面
 │   ├── js/                # 前端 JavaScript
 │   ├── css/               # 样式文件
-│   └── favicon.png        # 网站图标
+│   ├── favicon.png        # 网站图标
+│   └── favicon.ico        # 原始图标文件
+├── bin/
+│   └── imagebed           # CLI 命令行上传工具
 ├── uploads/               # 上传的图片文件
-└── data/                  # 元数据存储
-    └── images.json        # 图片记录
+└── data/
+    └── images.json        # 图片元数据记录
 ```
+
+## 安全特性
+
+- 文件类型双重校验（MIME 类型 + Sharp 真实图片检测）
+- 5 位随机文件名（62⁵ ≈ 9 亿种组合），防碰撞、防路径穿越
+- 上传频率限制，防止滥用
+- 管理页面密码保护（express-session 会话管理，24 小时过期）
+- 文件大小限制（默认 10MB，可配置）
+- 安全 HTTP 头（X-Content-Type-Options、X-Frame-Options 等）
+- HTTPS 加密传输（通过 Nginx + Let's Encrypt）
+- 路径遍历防护（图片文件名严格校验）
+
+## 飞书 / Coze 集成
+
+可作为扣子（Coze）自定义插件使用：
+
+```
+POST https://yousama.top/api/upload
+Content-Type: multipart/form-data
+Body: image=@文件
+
+Response: {"success":true,"url":"https://yousama.top/i/xxx.jpg","filename":"xxx.jpg"}
+```
+
+同时支持在飞书多维表格中通过插件调用，一列插入图片，一列自动返回 URL。
+
+## 许可证
+
+MIT
