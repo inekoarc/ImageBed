@@ -58,11 +58,34 @@ function copyText(text) {
 }
 
 // ============================
+// Auth Check — 检测 401 跳转登录
+// ============================
+async function authFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    window.location.href = '/login.html';
+    return null;
+  }
+  return res;
+}
+
+// ============================
+// Logout
+// ============================
+async function doLogout() {
+  const res = await authFetch('/api/logout', { method: 'POST' });
+  if (res) {
+    window.location.href = '/login.html';
+  }
+}
+
+// ============================
 // Load & Render Images
 // ============================
 async function loadImages() {
   try {
-    const res = await fetch('/api/images');
+    const res = await authFetch('/api/images');
+    if (!res) return;
     const data = await res.json();
 
     if (!data.success) {
@@ -138,7 +161,8 @@ async function loadImages() {
 // ============================
 async function deleteImage(id) {
   try {
-    const res = await fetch(`/api/images/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`/api/images/${id}`, { method: 'DELETE' });
+    if (!res) return;
     const data = await res.json();
     if (data.success) {
       showToast('图片已删除');
@@ -171,6 +195,22 @@ confirmModal.addEventListener('click', (e) => {
     deleteTargetId = null;
   }
 });
+
+// ============================
+// Add logout button to header
+// ============================
+const nav = document.querySelector('nav');
+if (nav) {
+  const logoutLink = document.createElement('a');
+  logoutLink.href = '#';
+  logoutLink.textContent = '退出';
+  logoutLink.style.color = '#ef4444';
+  logoutLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    doLogout();
+  });
+  nav.appendChild(logoutLink);
+}
 
 // ============================
 // Init

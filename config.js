@@ -8,6 +8,8 @@ const config = Object.freeze({
   domainUrl: (process.env.DOMAIN_URL || 'http://localhost:3000').replace(/\/+$/, ''),
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
   rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '60', 10),
+  adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+  sessionSecret: process.env.SESSION_SECRET || 'imagebed-secret-key',
   allowedMimeTypes: [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',
     'image/svg+xml', 'image/bmp', 'image/tiff'

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - ImageBed 图床</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 80px auto;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      padding: 40px 32px;
+      text-align: center;
+    }
+    .login-container h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .login-container p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .login-container input[type="password"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .login-container .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-container .btn-login:hover {
+      background: var(--primary-hover);
+    }
+    .login-container .error {
+      color: var(--danger);
+      font-size: 14px;
+      margin-bottom: 12px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="login-container">
+      <h1>🔒 管理员登录</h1>
+      <p>请输入密码以管理图片</p>
+      <div class="error" id="errorMsg"></div>
+      <input type="password" id="passwordInput" placeholder="请输入密码" autofocus>
+      <button class="btn-login" id="loginBtn">登 录</button>
+    </div>
+  </main>
+
+  <script>
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+
+    async function doLogin() {
+      const password = passwordInput.value.trim();
+      if (!password) {
+        errorMsg.textContent = '请输入密码';
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '登录中...';
+      errorMsg.textContent = '';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = '/manage.html';
+        } else {
+          errorMsg.textContent = data.error || '登录失败';
+        }
+      } catch {
+        errorMsg.textContent = '网络错误';
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '登 录';
+      }
+    }
+
+    loginBtn.addEventListener('click', doLogin);
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>
