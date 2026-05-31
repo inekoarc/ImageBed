@@ -5,8 +5,8 @@ const config = require('../config');
 function serveImage(req, res, next) {
   const filename = req.params.filename;
 
-  // 路径穿越防护：只允许 UUID 格式的文件名
-  if (!/^[0-9a-f-]+\.[a-z]+$/i.test(filename)) {
+  // 路径穿越防护：只允许字母数字和横杠（兼容旧 UUID 和新短文件名）
+  if (!/^[a-z0-9-]+\.[a-z]+$/i.test(filename)) {
     return res.status(400).json({ error: '无效的文件名' });
   }
 
