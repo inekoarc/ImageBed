@@ -14,7 +14,10 @@
       "Bash(ls *)",
       "Read(//c/Users/ZYBDY/.ssh/**)",
       "Bash(python3 *)",
-      "Bash(git credential *)"
+      "Bash(git credential *)",
+      "Bash(cscript *)",
+      "Bash(wmic *)",
+      "Bash(powershell *)"
     ]
   }
 }
