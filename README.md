@@ -37,7 +37,7 @@ UPLOAD_DIR=./uploads
 MAX_FILE_SIZE_MB=10
 
 # 服务器地址（返回的图片链接会以此开头）
-DOMAIN_URL=https://yousama.top
+DOMAIN_URL=https://your-domain.com
 
 # 上传频率限制（15分钟内最多60次）
 RATE_LIMIT_WINDOW_MS=900000
@@ -94,7 +94,7 @@ pm2 restart chaldeas # 重启
 ```nginx
 server {
     listen 80;
-    server_name yousama.top www.yousama.top;
+    server_name your-domain.com www.your-domain.com;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -111,7 +111,7 @@ server {
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d yousama.top -d www.yousama.top
+sudo certbot --nginx -d your-domain.com -d www.your-domain.com
 ```
 
 申请后自动续期，无需手动操作：
@@ -124,7 +124,7 @@ sudo certbot renew --dry-run  # 验证续期正常
 
 ### 上传图片
 
-1. 浏览器打开 `https://yousama.top`
+1. 浏览器打开 `https://your-domain.com`
 2. 拖拽图片到上传区域，或点击选择文件
 3. 确认预览无误后点击「开始上传」（选错可点「重新选择」）
 4. 上传成功后，可以：
@@ -135,7 +135,7 @@ sudo certbot renew --dry-run  # 验证续期正常
 
 ### 管理图片
 
-1. 访问 `https://yousama.top/manage.html`（自动跳转登录页）
+1. 访问 `https://your-domain.com/manage.html`（自动跳转登录页）
 2. 输入密码登录（密码在 `.env` 的 `ADMIN_PASSWORD`）
 3. 查看所有已上传图片的缩略图
 4. 点击「复制链接」快速获取 URL
@@ -149,7 +149,7 @@ sudo certbot renew --dry-run  # 验证续期正常
 node bin/imagebed 照片.jpg
 
 # 指定服务器地址（默认从 .env 读取）
-IMAGEBED_URL=https://yousama.top node bin/imagebed 照片.jpg
+IMAGEBED_URL=https://your-domain.com node bin/imagebed 照片.jpg
 ```
 
 CLI 会自动读取 `.env` 中的 `DOMAIN_URL`，跨平台剪贴板支持（Windows/macOS/Linux）。
@@ -159,7 +159,7 @@ CLI 会自动读取 `.env` 中的 `DOMAIN_URL`，跨平台剪贴板支持（Wind
 **上传图片（公开）**
 
 ```bash
-curl -F "image=@照片.jpg" https://yousama.top/api/upload
+curl -F "image=@照片.jpg" https://your-domain.com/api/upload
 ```
 
 响应：
@@ -167,7 +167,7 @@ curl -F "image=@照片.jpg" https://yousama.top/api/upload
 ```json
 {
   "success": true,
-  "url": "https://yousama.top/i/aB3xK.jpg",
+  "url": "https://your-domain.com/i/aB3xK.jpg",
   "filename": "aB3xK.jpg"
 }
 ```
@@ -177,25 +177,25 @@ curl -F "image=@照片.jpg" https://yousama.top/api/upload
 ```bash
 curl -X POST -H "Content-Type: application/json" \
   -d '{"password":"你的密码"}' \
-  https://yousama.top/api/login -c cookies.txt
+  https://your-domain.com/api/login -c cookies.txt
 ```
 
 **获取图片列表（需登录）**
 
 ```bash
-curl -b cookies.txt https://yousama.top/api/images
+curl -b cookies.txt https://your-domain.com/api/images
 ```
 
 **删除图片（需登录）**
 
 ```bash
-curl -b cookies.txt -X DELETE https://yousama.top/api/images/<id>
+curl -b cookies.txt -X DELETE https://your-domain.com/api/images/<id>
 ```
 
 **退出登录**
 
 ```bash
-curl -b cookies.txt -X POST https://yousama.top/api/logout
+curl -b cookies.txt -X POST https://your-domain.com/api/logout
 ```
 
 ## 技术栈
@@ -260,11 +260,11 @@ curl -b cookies.txt -X POST https://yousama.top/api/logout
 可作为扣子（Coze）自定义插件使用：
 
 ```
-POST https://yousama.top/api/upload
+POST https://your-domain.com/api/upload
 Content-Type: multipart/form-data
 Body: image=@文件
 
-Response: {"success":true,"url":"https://yousama.top/i/xxx.jpg","filename":"xxx.jpg"}
+Response: {"success":true,"url":"https://your-domain.com/i/xxx.jpg","filename":"xxx.jpg"}
 ```
 
 同时支持在飞书多维表格中通过插件调用，一列插入图片，一列自动返回 URL。
