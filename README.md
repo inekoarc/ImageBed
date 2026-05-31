@@ -85,7 +85,57 @@ pm2 startup          # 设置开机自启
 4. 点击「复制链接」快速获取 URL
 5. 点击「删除」移除不需要的图片
 
-## Nginx 反向代理（推荐）
+### CLI 命令行上传
+
+安装后可用命令上传图片，URL 自动复制到剪贴板：
+
+```bash
+# 安装依赖后直接用
+node bin/imagebed 照片.jpg
+# 或指定服务器地址
+IMAGEBED_URL=http://你的服务器IP:3000 node bin/imagebed 照片.jpg
+```
+
+支持 Linux / Windows / macOS，详细用法见 `bin/imagebed`。
+
+## 公网访问 / HTTPS（二选一）
+
+### 方案 A：Cloudflare Tunnel（无域名免费方案）
+
+不需要域名，自动提供 HTTPS：
+
+```bash
+# 1. 安装 cloudflared
+curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
+chmod +x /usr/local/bin/cloudflared
+
+# 2. 启动隧道（指向本地图床）
+cloudflared tunnel --url http://localhost:3000
+```
+
+会输出 `https://xxx.trycloudflare.com` 地址，将 `.env` 中的 `DOMAIN_URL` 改为这个地址即可。
+
+**做成服务自动启动**：
+
+```bash
+sudo tee /etc/systemd/system/cloudflared.service << 'EOF'
+[Unit]
+Description=Cloudflare Tunnel
+[Service]
+ExecStart=/usr/local/bin/cloudflared tunnel --url http://localhost:3000
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable --now cloudflared
+```
+
+### 方案 B：Nginx + 域名 + HTTPS（生产推荐）
+
+1. **买域名** — 腾讯云 / 阿里云，约 10~50 元/年
+2. **DNS 解析** — 添加 A 记录指向你的服务器 IP
+3. **配置 Nginx**：
 
 创建 `/etc/nginx/sites-available/chaldeas`：
 
@@ -106,7 +156,7 @@ server {
 }
 ```
 
-启用并配置 HTTPS：
+4. **启用并配置 HTTPS**：
 
 ```bash
 ln -s /etc/nginx/sites-available/chaldeas /etc/nginx/sites-enabled/
@@ -114,7 +164,34 @@ certbot --nginx -d your-domain.com
 nginx -s reload
 ```
 
-**配置 HTTPS 后**，记得将 `.env` 中的 `DOMAIN_URL` 改为 `https://your-domain.com`。
+5. **更新 `.env`**：将 `DOMAIN_URL` 改为 `https://your-domain.com`
+
+## 集成到扣子（Coze）插件
+
+### 场景
+
+在飞书多维表格中使用：一列插入图片，一列自动得到 URL。
+
+### 方法一：使用 CLI 工具手动上传
+
+```bash
+# 下载图片 → 上传图床 → URL 自动复制到剪贴板 → 粘贴到飞书
+node bin/imagebed 图片.jpg
+```
+
+### 方法二：配置扣子自定义插件
+
+需要先配好 **HTTPS 公网访问**（参考上方方案 A 或 B）：
+
+1. 登录 https://www.coze.cn → 插件 → 创建自定义插件
+2. 配置 API：
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/upload` | POST | 上传图片，参数 `image`（file），返回 `url` |
+| `/api/images` | GET | 获取图片列表（需登录） |
+
+3. 在 Bot 的技能中添加此插件即可使用。
 
 ## API 文档
 
