@@ -12,6 +12,9 @@ async function uploadHandler(req, res, next) {
 
   const file = req.file;
 
+  // 修复中文文件名编码（HTTP 头默认用 Latin-1，中文会被乱码）
+  file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
   try {
     // 第二层校验：用 sharp 验证图片完整性并获取元数据
     let width, height;
