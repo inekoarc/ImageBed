@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chaldeas 图床插件</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f6f7;
+      color: #333;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      padding: 12px 0 20px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      color: #1a1a1a;
+    }
+
+    .header p {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .upload-area {
+      background: #fff;
+      border: 2px dashed #d0d5dd;
+      border-radius: 12px;
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-area:hover {
+      border-color: #4A90D9;
+      background: #f8faff;
+    }
+
+    .upload-area.dragover {
+      border-color: #4A90D9;
+      background: #eef4ff;
+    }
+
+    .upload-area .icon {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .upload-area .text {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .upload-area .hint {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    .upload-area .url-input-section {
+      margin-top: 16px;
+      text-align: left;
+    }
+
+    .upload-area .url-input-section label {
+      font-size: 12px;
+      color: #888;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .upload-area .url-input-section input[type="url"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .upload-area .url-input-section input[type="url"]:focus {
+      border-color: #4A90D9;
+    }
+
+    .preview-area {
+      display: none;
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .preview-area.show {
+      display: block;
+    }
+
+    .preview-area .preview-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #f0f0f0;
+    }
+
+    .preview-area .preview-info {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .result-area {
+      display: none;
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .result-area.show {
+      display: block;
+    }
+
+    .result-area .result-img {
+      width: 100%;
+      max-height: 150px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #f0f0f0;
+    }
+
+    .result-area .url-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .result-area .url-row input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #d0d5dd;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #333;
+      outline: none;
+      background: #f9f9f9;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #4A90D9;
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #357abd;
+    }
+
+    .btn-success {
+      background: #34c759;
+      color: #fff;
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: #2db84e;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: #666;
+      border: 1px solid #d0d5dd;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: #f5f5f5;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .btn-block {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .actions .btn {
+      flex: 1;
+    }
+
+    .progress-bar {
+      display: none;
+      width: 100%;
+      height: 4px;
+      background: #e8e8e8;
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar.show {
+      display: block;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      background: #4A90D9;
+      border-radius: 2px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+
+    .status.success {
+      color: #34c759;
+    }
+
+    .status.error {
+      color: #ff3b30;
+    }
+
+    .fill-cell-btn {
+      display: none;
+    }
+
+    .fill-cell-btn.show {
+      display: block;
+    }
+
+    .divider {
+      text-align: center;
+      color: #bbb;
+      font-size: 12px;
+      padding: 12px 0;
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #e8e8e8;
+    }
+
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+
+    .footer {
+      text-align: center;
+      padding: 16px 0 8px;
+      font-size: 11px;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🖼️ Chaldeas 图床</h1>
+      <p>上传图片到图床，获取短链接并自动填入单元格</p>
+    </div>
+
+    <!-- 上传区域 -->
+    <div class="upload-area" id="uploadArea">
+      <div class="icon">📁</div>
+      <div class="text">点击选择图片，或拖拽到此处</div>
+      <div class="hint">支持 JPG / PNG / GIF / WebP / SVG / BMP，最大 10MB</div>
+      <input type="file" id="fileInput" accept="image/*">
+
+      <div class="divider">或</div>
+
+      <div class="url-input-section">
+        <label for="urlInput">输入图片 URL</label>
+        <div style="display:flex;gap:6px;">
+          <input type="url" id="imageUrlInput" placeholder="https://example.com/photo.jpg">
+          <button class="btn btn-primary btn-sm" id="uploadUrlBtn">上传</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 预览 -->
+    <div class="preview-area" id="previewArea">
+      <img class="preview-img" id="previewImg" src="" alt="预览">
+      <div class="preview-info">
+        <span id="previewName">图片</span>
+        <span id="previewSize"></span>
+      </div>
+      <div class="progress-bar" id="progressBar">
+        <div class="fill" id="progressFill"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary btn-block" id="uploadBtn">开始上传</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <!-- 结果 -->
+    <div class="result-area" id="resultArea">
+      <img class="result-img" id="resultImg" src="" alt="上传结果">
+      <div class="url-row">
+        <input type="text" id="resultUrl" readonly>
+        <button class="btn btn-outline btn-sm" id="copyBtn">📋</button>
+      </div>
+      <button class="btn btn-success btn-block fill-cell-btn" id="fillCellBtn">
+        ✅ 填入当前单元格
+      </button>
+      <button class="btn btn-outline btn-block" id="resetBtn">继续上传</button>
+    </div>
+
+    <div class="footer">Chaldeas ImageBed · v1.0.0</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 1,
+  "name": "Chaldeas 图床",
+  "description": "上传图片到图床，自动获取可访问的短链接",
+  "version": "1.0.0",
+  "icon": "https://your-domain.com/favicon.png",
+  "author": {
+    "name": "Chaldeas"
+  },
+  "lark_icon": {
+    "type": "web_app",
+    "entry": "index.html",
+    "size": {
+      "width": 400,
+      "height": 600
+    },
+    "support_sharing": false,
+    "mobile": {
+      "enable": false
+    }
+  },
+  "permissions": {
+    "bitable:app": ["write_cell", "read_cell"],
+    "network": ["your-domain.com"]
+  }
+}
