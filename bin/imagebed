@@ -1,0 +1,128 @@
+#!/usr/bin/env node
+
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+// 从 .env 读取服务器地址，也可通过环境变量 IMAGEBED_URL 传入
+let SERVER_URL = process.env.IMAGEBED_URL || 'http://localhost:3000';
+try {
+  if (fs.existsSync(path.join(__dirname, '..', '.env'))) {
+    const env = fs.readFileSync(path.join(__dirname, '..', '.env'), 'utf-8');
+    const match = env.match(/^DOMAIN_URL=(.+)$/m);
+    if (match) SERVER_URL = match[1].trim();
+  }
+} catch {}
+
+const filePath = process.argv[2];
+
+if (!filePath || process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`
+  📸 ImageBed CLI — 上传图片到图床并复制 URL
+
+  用法:
+    imagebed <图片路径>
+
+  示例:
+    imagebed 照片.jpg
+    imagebed ~/截图/screenshot.png
+    IMAGEBED_URL=http://你的服务器:3000 imagebed photo.jpg
+
+  环境变量:
+    IMAGEBED_URL  图床服务器地址（默认从 .env 读取或 http://localhost:3000）
+  `);
+  process.exit(filePath ? 0 : 1);
+}
+
+// 校验文件
+if (!fs.existsSync(filePath)) {
+  console.error('❌ 文件不存在:', filePath);
+  process.exit(1);
+}
+
+const stat = fs.statSync(filePath);
+if (!stat.isFile()) {
+  console.error('❌ 不是一个文件:', filePath);
+  process.exit(1);
+}
+
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+if (stat.size > MAX_SIZE) {
+  console.error(`❌ 文件过大（最大 10MB）: ${(stat.size / 1024 / 1024).toFixed(1)}MB`);
+  process.exit(1);
+}
+
+// 上传
+const filename = path.basename(filePath);
+const boundary = '----FormBoundary' + Date.now();
+const fileContent = fs.readFileSync(filePath);
+
+const header = Buffer.from(
+  `--${boundary}\r\n` +
+  `Content-Disposition: form-data; name="image"; filename="${filename}"\r\n` +
+  `Content-Type: ${({
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+    gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml',
+    bmp: 'image/bmp', tiff: 'image/tiff', tif: 'image/tiff'
+  })[path.extname(filePath).slice(1).toLowerCase()] || 'image/jpeg'}\r\n\r\n`,
+  'utf-8'
+);
+const footer = Buffer.from(`\r\n--${boundary}--\r\n`, 'utf-8');
+const body = Buffer.concat([header, fileContent, footer]);
+
+const urlObj = new URL(SERVER_URL);
+const options = {
+  hostname: urlObj.hostname,
+  port: urlObj.port || 3000,
+  path: '/api/upload',
+  method: 'POST',
+  headers: {
+    'Content-Type': `multipart/form-data; boundary=${boundary}`,
+    'Content-Length': body.length
+  }
+};
+
+console.log(`📤 上传中... (${(stat.size / 1024).toFixed(1)}KB)`);
+
+const req = http.request(options, (res) => {
+  let data = '';
+  res.on('data', chunk => data += chunk);
+  res.on('end', () => {
+    try {
+      const result = JSON.parse(data);
+      if (result.success) {
+        const url = result.url;
+        // 复制到剪贴板
+        try {
+          if (process.platform === 'win32') {
+            execSync(`echo ${url} | clip`, { shell: 'powershell' });
+          } else if (process.platform === 'darwin') {
+            execSync(`echo "${url}" | pbcopy`);
+          } else {
+            execSync(`echo -n "${url}" | xclip -selection clipboard 2>/dev/null || echo -n "${url}" | xsel -ib 2>/dev/null || true`);
+          }
+          console.log(`✅ 已上传并复制到剪贴板`);
+        } catch {
+          console.log(`✅ 上传成功`);
+        }
+        console.log(`🔗 ${url}`);
+      } else {
+        console.error('❌ 上传失败:', result.error || '未知错误');
+        process.exit(1);
+      }
+    } catch {
+      console.error('❌ 响应解析失败');
+      process.exit(1);
+    }
+  });
+});
+
+req.on('error', (err) => {
+  console.error(`❌ 连接失败: ${err.message}`);
+  console.error(`   请确认服务器地址是否正确: ${SERVER_URL}`);
+  process.exit(1);
+});
+
+req.write(body);
+req.end();
