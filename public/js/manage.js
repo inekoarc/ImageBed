@@ -93,8 +93,7 @@ async function loadImages() {
         : img.originalName;
 
       card.innerHTML = `
-        <img class="thumb" src="${img.url}" alt="${img.originalName}" loading="lazy"
-          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22160%22><rect fill=%22%23f1f5f9%22 width=%22200%22 height=%22160%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%2394a3b8%22 font-size=%2214%22>加载失败</text></svg>'">
+        <img class="thumb" src="${img.url}" alt="${img.originalName}" loading="lazy">
         <div class="card-body">
           <div class="filename" title="${img.originalName}">${displayName}</div>
           <div class="meta">${formatSize(img.size)} · ${uploadDate}</div>
@@ -104,6 +103,16 @@ async function loadImages() {
           </div>
         </div>
       `;
+      // 用 JS 监听 error 事件（避免 CSP script-src-attr 拦截内联 onerror）
+      const thumb = card.querySelector('.thumb');
+      thumb.addEventListener('error', function() {
+        this.src = 'data:image/svg+xml,' + encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="160">' +
+          '<rect fill="#f1f5f9" width="200" height="160"/>' +
+          '<text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#94a3b8" font-size="14">加载失败</text>' +
+          '</svg>'
+        );
+      });
 
       imageGrid.appendChild(card);
     });
