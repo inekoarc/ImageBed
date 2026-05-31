@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - ImageBed 图床</title>
+  <title>登录 - Chaldeas</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/css/style.css">
   <style>
     .login-container {
@@ -18,6 +19,11 @@
     .login-container h1 {
       font-size: 24px;
       margin-bottom: 8px;
+    }
+    .login-container .login-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
     }
     .login-container p {
       color: var(--text-secondary);
@@ -63,7 +69,8 @@
 <body>
   <main>
     <div class="login-container">
-      <h1>🔒 管理员登录</h1>
+      <img src="/favicon.ico" class="login-icon" alt="">
+      <h1>管理员登录</h1>
       <p>请输入密码以管理图片</p>
       <div class="error" id="errorMsg"></div>
       <input type="password" id="passwordInput" placeholder="请输入密码" autofocus>
