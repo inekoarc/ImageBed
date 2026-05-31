@@ -168,6 +168,8 @@ uploadBtn.addEventListener('click', async () => {
     resultImage.src = result.url;
     urlInput.value = result.url;
     progressBar.hidden = true;
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = '上传完成 ✓';
     showToast('上传成功！');
   } catch (err) {
     showToast(err.error || '上传失败');
