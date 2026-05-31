@@ -1,5 +1,4 @@
 const express = require('express');
-const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const config = require('./config');
@@ -11,10 +10,14 @@ const { listImages, getImage, deleteImage } = require('./routes/images');
 
 const app = express();
 
-// 安全头（HTTP 模式下禁用 CSP，避免 upgrade-insecure-requests 拦截请求）
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+// 安全头（手动设置，避免 Helmet 默认策略导致 HTTP 模式下图片加载问题）
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '0');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
 
 // 日志
 app.use(morgan('combined'));

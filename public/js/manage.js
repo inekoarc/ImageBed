@@ -93,7 +93,7 @@ async function loadImages() {
         : img.originalName;
 
       card.innerHTML = `
-        <img class="thumb" src="${img.url}" alt="${img.originalName}" loading="lazy">
+        <img class="thumb" src="/i/${img.filename}" alt="${img.originalName}" loading="lazy">
         <div class="card-body">
           <div class="filename" title="${img.originalName}">${displayName}</div>
           <div class="meta">${formatSize(img.size)} · ${uploadDate}</div>

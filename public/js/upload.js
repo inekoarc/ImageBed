@@ -165,7 +165,7 @@ uploadBtn.addEventListener('click', async () => {
     // 上传成功
     preview.hidden = true;
     result.hidden = false;
-    resultImage.src = data.url;
+    resultImage.src = '/i/' + data.filename;
     urlInput.value = data.url;
     progressBar.hidden = true;
     uploadBtn.disabled = false;
