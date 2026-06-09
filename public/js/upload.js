@@ -4,22 +4,23 @@
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const preview = document.getElementById('preview');
-const previewImage = document.getElementById('previewImage');
 const previewName = document.getElementById('previewName');
 const previewSize = document.getElementById('previewSize');
+const previewGrid = document.getElementById('previewGrid');
 const progressBar = document.getElementById('progressBar');
 const progressFill = document.getElementById('progressFill');
 const uploadBtn = document.getElementById('uploadBtn');
 const result = document.getElementById('result');
-const resultImage = document.getElementById('resultImage');
-const urlInput = document.getElementById('urlInput');
+const resultCount = document.getElementById('resultCount');
+const resultList = document.getElementById('resultList');
 const copyUrlBtn = document.getElementById('copyUrlBtn');
 const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
 const copyHtmlBtn = document.getElementById('copyHtmlBtn');
 const resetBtn = document.getElementById('resetBtn');
 const reselectBtn = document.getElementById('reselectBtn');
 
-let selectedFile = null;
+let selectedFiles = [];
+let uploadedImages = [];
 
 // ============================
 // Utility
@@ -47,10 +48,11 @@ function showToast(msg) {
 }
 
 function copyText(text) {
+  if (!text) return;
+
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板'));
   } else {
-    // HTTP 回退方案
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
@@ -63,48 +65,109 @@ function copyText(text) {
   }
 }
 
+function resetUploadView() {
+  selectedFiles = [];
+  uploadedImages = [];
+  fileInput.value = '';
+  previewGrid.innerHTML = '';
+  resultList.innerHTML = '';
+  dropZone.hidden = false;
+  preview.hidden = true;
+  result.hidden = true;
+  progressBar.hidden = true;
+  progressFill.style.width = '0%';
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = '开始上传';
+}
+
+function imageAlt(image, index) {
+  return image.originalname || image.filename || `image-${index + 1}`;
+}
+
 // ============================
 // File Selection
 // ============================
-function handleFile(file) {
-  if (!file) return;
+function validateFile(file) {
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'image/bmp',
+    'image/tiff'
+  ];
 
-  // 客户端校验
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'image/svg+xml', 'image/bmp', 'image/tiff'];
   if (!allowedTypes.includes(file.type)) {
-    showToast('不支持的文件类型');
-    return;
+    showToast(`${file.name} 不是支持的图片类型`);
+    return false;
   }
 
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
-    showToast('文件过大，最大支持 10MB');
-    return;
+    showToast(`${file.name} 超过 10MB`);
+    return false;
   }
 
-  selectedFile = file;
+  return true;
+}
 
-  // 预览
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewImage.src = e.target.result;
-    previewName.textContent = file.name;
-    previewSize.textContent = formatSize(file.size);
-    dropZone.hidden = true;
-    preview.hidden = false;
-    result.hidden = true;
-    progressBar.hidden = true;
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = '开始上传';
-  };
-  reader.readAsDataURL(file);
+function renderPreview(files) {
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  previewName.textContent = files.length === 1 ? files[0].name : `${files.length} 张图片`;
+  previewSize.textContent = formatSize(totalSize);
+  previewGrid.innerHTML = '';
+
+  files.forEach((file) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+
+    const img = document.createElement('img');
+    img.alt = file.name;
+    item.appendChild(img);
+
+    const meta = document.createElement('div');
+    meta.className = 'preview-item-meta';
+
+    const filename = document.createElement('span');
+    filename.title = file.name;
+    filename.textContent = file.name;
+    meta.appendChild(filename);
+
+    const size = document.createElement('small');
+    size.textContent = formatSize(file.size);
+    meta.appendChild(size);
+
+    item.appendChild(meta);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    previewGrid.appendChild(item);
+  });
+
+  dropZone.hidden = true;
+  preview.hidden = false;
+  result.hidden = true;
+  progressBar.hidden = true;
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = files.length === 1 ? '开始上传' : `上传 ${files.length} 张图片`;
+}
+
+function handleFiles(fileList) {
+  const files = Array.from(fileList || []).filter(validateFile);
+  if (!files.length) return;
+
+  selectedFiles = files;
+  renderPreview(files);
 }
 
 dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-// 拖拽
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
   dropZone.classList.add('drag-over');
@@ -117,15 +180,14 @@ dropZone.addEventListener('dragleave', () => {
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
   dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  handleFile(file);
+  handleFiles(e.dataTransfer.files);
 });
 
 // ============================
 // Upload
 // ============================
 uploadBtn.addEventListener('click', async () => {
-  if (!selectedFile) return;
+  if (!selectedFiles.length) return;
 
   uploadBtn.disabled = true;
   uploadBtn.textContent = '上传中...';
@@ -133,10 +195,9 @@ uploadBtn.addEventListener('click', async () => {
   progressFill.style.width = '0%';
 
   const formData = new FormData();
-  formData.append('image', selectedFile);
+  selectedFiles.forEach((file) => formData.append('image', file));
 
   try {
-    // 用 XHR 实现上传进度
     const xhr = new XMLHttpRequest();
     const data = await new Promise((resolve, reject) => {
       xhr.upload.addEventListener('progress', (e) => {
@@ -163,51 +224,83 @@ uploadBtn.addEventListener('click', async () => {
       xhr.send(formData);
     });
 
-    // 上传成功
-    preview.hidden = true;
-    result.hidden = false;
-    resultImage.src = '/i/' + data.filename;
-    urlInput.value = data.url;
-    progressBar.hidden = true;
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = '上传完成 ✓';
-    showToast('上传成功！');
+    uploadedImages = data.images || [data];
+    renderResult(uploadedImages);
+    showToast(`上传成功：${uploadedImages.length} 张`);
   } catch (err) {
     showToast(err.error || '上传失败');
     progressFill.style.width = '0%';
     uploadBtn.disabled = false;
-    uploadBtn.textContent = '开始上传';
+    uploadBtn.textContent = selectedFiles.length === 1 ? '开始上传' : `上传 ${selectedFiles.length} 张图片`;
   }
 });
+
+function renderResult(images) {
+  preview.hidden = true;
+  result.hidden = false;
+  progressBar.hidden = true;
+  resultCount.textContent = `${images.length} 张图片已生成 URL`;
+  resultList.innerHTML = '';
+
+  images.forEach((image, index) => {
+    const item = document.createElement('div');
+    item.className = 'result-item';
+
+    const thumb = document.createElement('img');
+    thumb.src = '/i/' + image.filename;
+    thumb.alt = imageAlt(image, index);
+    item.appendChild(thumb);
+
+    const body = document.createElement('div');
+    body.className = 'result-item-body';
+
+    const name = document.createElement('div');
+    name.className = 'result-item-name';
+    name.textContent = imageAlt(image, index);
+    body.appendChild(name);
+
+    const row = document.createElement('div');
+    row.className = 'result-item-url';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = image.url;
+    input.readOnly = true;
+    row.appendChild(input);
+
+    const copyButton = document.createElement('button');
+    copyButton.className = 'btn btn-copy';
+    copyButton.type = 'button';
+    copyButton.textContent = '复制';
+    copyButton.addEventListener('click', () => copyText(image.url));
+    row.appendChild(copyButton);
+
+    body.appendChild(row);
+    item.appendChild(body);
+    resultList.appendChild(item);
+  });
+
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = '上传完成';
+}
 
 // ============================
 // Copy Buttons
 // ============================
-copyUrlBtn.addEventListener('click', () => copyText(urlInput.value));
-copyMarkdownBtn.addEventListener('click', () => copyText(`![${selectedFile?.name || 'image'}](${urlInput.value})`));
-copyHtmlBtn.addEventListener('click', () => copyText(`<img src="${urlInput.value}" alt="${selectedFile?.name || 'image'}">`));
+copyUrlBtn.addEventListener('click', () => {
+  copyText(uploadedImages.map((image) => image.url).join('\n'));
+});
+
+copyMarkdownBtn.addEventListener('click', () => {
+  copyText(uploadedImages.map((image, index) => `![${imageAlt(image, index)}](${image.url})`).join('\n'));
+});
+
+copyHtmlBtn.addEventListener('click', () => {
+  copyText(uploadedImages.map((image, index) => `<img src="${image.url}" alt="${imageAlt(image, index)}">`).join('\n'));
+});
 
 // ============================
 // Reset
 // ============================
-resetBtn.addEventListener('click', () => {
-  selectedFile = null;
-  fileInput.value = '';
-  dropZone.hidden = false;
-  preview.hidden = true;
-  result.hidden = true;
-  progressBar.hidden = true;
-  progressFill.style.width = '0%';
-});
-
-// 重新选择
-reselectBtn.addEventListener('click', () => {
-  selectedFile = null;
-  fileInput.value = '';
-  dropZone.hidden = false;
-  preview.hidden = true;
-  progressBar.hidden = true;
-  progressFill.style.width = '0%';
-  uploadBtn.disabled = false;
-  uploadBtn.textContent = '开始上传';
-});
+resetBtn.addEventListener('click', resetUploadView);
+reselectBtn.addEventListener('click', resetUploadView);

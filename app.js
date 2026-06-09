@@ -62,7 +62,7 @@ const uploadLimiter = rateLimit({
 });
 
 // ===== 公开路由 =====
-app.post('/api/upload', uploadLimiter, upload.single('image'), uploadHandler);
+app.post('/api/upload', uploadLimiter, upload.array('image', 50), uploadHandler);
 app.post('/api/login', login);
 app.get('/i/:filename', serveImage);
 

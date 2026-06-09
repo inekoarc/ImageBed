@@ -19,41 +19,35 @@
   <main>
     <div class="upload-container">
       <div class="drop-zone" id="dropZone">
-        <p class="drop-zone-icon">📁</p>
-        <p class="drop-zone-text">拖拽图片到此处，或 <span class="browse-link">点击浏览</span></p>
-        <p class="drop-zone-hint">支持 JPG / PNG / GIF / WebP / SVG / BMP / TIFF，最大 10MB</p>
-        <input type="file" id="fileInput" accept="image/*" hidden>
+        <p class="drop-zone-icon">图片</p>
+        <p class="drop-zone-text">拖拽一张或多张图片到此处，或 <span class="browse-link">点击浏览</span></p>
+        <p class="drop-zone-hint">支持 JPG / PNG / GIF / WebP / SVG / BMP / TIFF，单张最大 10MB</p>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
       </div>
 
       <div class="preview" id="preview" hidden>
-        <div class="preview-image-wrapper">
-          <img id="previewImage" src="" alt="预览">
-        </div>
-        <div class="preview-info">
-          <span id="previewName"></span>
+        <div class="preview-summary">
+          <strong id="previewName"></strong>
           <span id="previewSize"></span>
         </div>
+        <div class="preview-grid" id="previewGrid"></div>
         <div class="progress-bar" id="progressBar" hidden>
           <div class="progress-fill" id="progressFill"></div>
         </div>
         <button class="btn btn-upload" id="uploadBtn">开始上传</button>
-        <button class="btn btn-reset" id="reselectBtn" style="margin-top:8px">重新选择</button>
+        <button class="btn btn-reset" id="reselectBtn">重新选择</button>
       </div>
 
       <div class="result" id="result" hidden>
-        <div class="result-image-wrapper">
-          <img id="resultImage" src="" alt="上传结果">
+        <div class="result-header">
+          <strong id="resultTitle">上传完成</strong>
+          <span id="resultCount"></span>
         </div>
-        <div class="result-url">
-          <label for="urlInput">图片链接</label>
-          <div class="url-input-group">
-            <input type="text" id="urlInput" readonly>
-            <button class="btn btn-copy" id="copyUrlBtn">📋 复制链接</button>
-          </div>
-          <div class="url-actions">
-            <button class="btn btn-copy" id="copyMarkdownBtn">复制 Markdown</button>
-            <button class="btn btn-copy" id="copyHtmlBtn">复制 HTML</button>
-          </div>
+        <div class="result-list" id="resultList"></div>
+        <div class="url-actions batch-actions">
+          <button class="btn btn-copy" id="copyUrlBtn">复制全部链接</button>
+          <button class="btn btn-copy" id="copyMarkdownBtn">复制全部 Markdown</button>
+          <button class="btn btn-copy" id="copyHtmlBtn">复制全部 HTML</button>
         </div>
         <button class="btn btn-reset" id="resetBtn">继续上传</button>
       </div>

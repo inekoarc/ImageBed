@@ -1,18 +1,20 @@
 # 🏰 Chaldeas 图床
 
-简洁美观的图床应用 —— 上传图片，即可获得一张可访问的短链接。支持密码保护的管理后台，以及 CLI 命令行上传。
+简洁美观的图床应用 —— 上传图片，即可获得可访问的短链接。支持多图批量上传、密码保护的管理后台、CLI 命令行上传，以及飞书多维表格插件。
 
 ## 功能特性
 
-- ⚡ **拖拽上传** — 支持拖拽或点击选择图片，上传前可预览、重新选择
+- ⚡ **批量上传** — 支持多张图片同时上传，拖拽或点击选择
 - 🔗 **5 位短链接** — 生成 `aB3xK.jpg` 格式的短链接，简洁美观
 - 🖼️ **多格式支持** — JPG / PNG / GIF / WebP / SVG / BMP / TIFF
-- 📋 **一键复制** — 支持复制原始链接、Markdown、HTML 三种格式
+- 📋 **一键复制** — 单张复制，或批量复制全部链接 / Markdown / HTML
 - 🔒 **管理保护** — 图片管理和删除需要密码登录，上传保持公开
 - 🗑️ **图片管理** — 可视化管理所有已上传图片，支持删除
-- 🎨 **自定义图标** — Chaldeas 主题品牌图标
-- 🌐 **中文支持** — 中文文件名上传不会乱码
 - 🖥️ **CLI 工具** — 命令行上传，URL 自动复制到剪贴板
+- 🌐 **中文支持** — 中文文件名上传不会乱码
+- 🔗 **URL 上传** — 支持传入图片 URL 自动下载到图床（Coze / API 集成）
+- 📊 **飞书插件** — 飞书多维表格字段捷径，一列插图片一列自动返回 URL
+- 🎨 **自定义图标** — Chaldeas 主题品牌图标
 
 ## 快速开始
 
@@ -24,7 +26,7 @@ npm install
 
 ### 2. 配置环境变量
 
-编辑 `.env` 文件：
+复制 `.env.example` 为 `.env` 并编辑：
 
 ```env
 # 服务端口
@@ -125,13 +127,13 @@ sudo certbot renew --dry-run  # 验证续期正常
 ### 上传图片
 
 1. 浏览器打开 `https://your-domain.com`
-2. 拖拽图片到上传区域，或点击选择文件
+2. 拖拽一张或多张图片到上传区域，或点击选择文件
 3. 确认预览无误后点击「开始上传」（选错可点「重新选择」）
-4. 上传成功后，可以：
-   - **复制链接** — 直接复制图片 URL
-   - **复制 Markdown** — 复制 `![alt](url)` 格式
-   - **复制 HTML** — 复制 `<img src="url">` 格式
-   - 点击「继续上传」上传下一张
+4. 上传成功后，每张图片可单独复制 URL，或批量：
+   - **复制全部链接** — 每行一个 URL
+   - **复制全部 Markdown** — 每行一个 `![alt](url)` 格式
+   - **复制全部 HTML** — 每行一个 `<img src="url">` 格式
+5. 点击「继续上传」上传下一批
 
 ### 管理图片
 
@@ -154,12 +156,28 @@ IMAGEBED_URL=https://your-domain.com node bin/imagebed 照片.jpg
 
 CLI 会自动读取 `.env` 中的 `DOMAIN_URL`，跨平台剪贴板支持（Windows/macOS/Linux）。
 
-### API 接口
+## API 参考
 
-**上传图片（公开）**
+### 上传图片（公开）
+
+**multipart/form-data（推荐）：**
 
 ```bash
-curl -F "image=@照片.jpg" https://your-domain.com/api/upload
+curl -F "image=@照片1.jpg" -F "image=@照片2.jpg" https://your-domain.com/api/upload
+```
+
+**JSON URL 传入（Coze / 程序调用）：**
+
+```bash
+# 单张 URL
+curl -X POST https://your-domain.com/api/upload \
+  -H "Content-Type: application/json" \
+  -d '{"image": "https://example.com/photo.jpg"}'
+
+# 批量 URL
+curl -X POST https://your-domain.com/api/upload \
+  -H "Content-Type: application/json" \
+  -d '{"images": ["https://example.com/1.jpg", "https://example.com/2.jpg"]}'
 ```
 
 响应：
@@ -167,12 +185,34 @@ curl -F "image=@照片.jpg" https://your-domain.com/api/upload
 ```json
 {
   "success": true,
-  "url": "https://your-domain.com/i/aB3xK.jpg",
-  "filename": "aB3xK.jpg"
+  "count": 2,
+  "images": [
+    {
+      "url": "https://your-domain.com/i/aB3xK.jpg",
+      "filename": "aB3xK.jpg",
+      "originalName": "photo.jpg",
+      "size": 123456,
+      "width": 1920,
+      "height": 1080
+    }
+  ]
 }
 ```
 
-**登录管理后台**
+单张上传时额外返回简写字段：
+
+```json
+{
+  "success": true,
+  "url": "https://your-domain.com/i/aB3xK.jpg",
+  "filename": "aB3xK.jpg",
+  "images": [...]
+}
+```
+
+### 管理后台 API
+
+**登录：**
 
 ```bash
 curl -X POST -H "Content-Type: application/json" \
@@ -180,23 +220,36 @@ curl -X POST -H "Content-Type: application/json" \
   https://your-domain.com/api/login -c cookies.txt
 ```
 
-**获取图片列表（需登录）**
+**获取图片列表（需登录）：**
 
 ```bash
 curl -b cookies.txt https://your-domain.com/api/images
 ```
 
-**删除图片（需登录）**
+**删除图片（需登录）：**
 
 ```bash
 curl -b cookies.txt -X DELETE https://your-domain.com/api/images/<id>
 ```
 
-**退出登录**
+**退出登录：**
 
 ```bash
 curl -b cookies.txt -X POST https://your-domain.com/api/logout
 ```
+
+## 飞书多维表格插件
+
+提供了飞书多维表格插件，支持在表格中直接上传图片并自动填入 URL。
+
+部署到服务器：
+
+```bash
+cp -r feishu-plugin public/
+pm2 restart chaldeas
+```
+
+安装步骤见 [feishu-plugin/README.md](feishu-plugin/README.md)。
 
 ## 技术栈
 
@@ -204,7 +257,7 @@ curl -b cookies.txt -X POST https://your-domain.com/api/logout
 |------|------|
 | Node.js 24 | 运行时 |
 | Express 5 | Web 框架 |
-| Multer 2.x | 文件上传处理 |
+| Multer 2.x | 文件上传处理（支持批量） |
 | Sharp | 图片校验 + 元数据提取 |
 | express-session | 会话管理（24h 过期） |
 | express-rate-limit | 上传频率限制 |
@@ -216,13 +269,13 @@ curl -b cookies.txt -X POST https://your-domain.com/api/logout
 ├── server.js              # 入口文件
 ├── app.js                 # Express 应用（路由、会话、认证）
 ├── config.js              # 集中配置
-├── .env                   # 环境配置（端口、密码、域名等）
+├── .env                   # 环境配置
 ├── middleware/
 │   ├── upload.js          # Multer 上传配置 + 5位短文件名生成
 │   ├── fileFilter.js      # 文件类型白名单校验
 │   └── errorHandler.js    # 全局错误处理
 ├── routes/
-│   ├── upload.js          # POST /api/upload
+│   ├── upload.js          # POST /api/upload（支持多图、URL传入）
 │   ├── images.js          # GET/DELETE /api/images
 │   ├── serve.js           # GET /i/:filename
 │   └── auth.js            # POST /api/login, /api/logout
@@ -230,13 +283,13 @@ curl -b cookies.txt -X POST https://your-domain.com/api/logout
 │   ├── store.js           # JSON 文件元数据存储
 │   └── fileInfo.js        # 文件信息构建
 ├── public/                # 前端页面
-│   ├── index.html         # 上传页面
+│   ├── index.html         # 上传页面（支持多图）
 │   ├── manage.html        # 管理页面（需登录）
 │   ├── login.html         # 登录页面
 │   ├── js/                # 前端 JavaScript
 │   ├── css/               # 样式文件
-│   ├── favicon.png        # 网站图标
-│   └── favicon.ico        # 原始图标文件
+│   └── favicon.png        # 网站图标
+├── feishu-plugin/         # 飞书多维表格插件
 ├── bin/
 │   └── imagebed           # CLI 命令行上传工具
 ├── uploads/               # 上传的图片文件
@@ -255,19 +308,17 @@ curl -b cookies.txt -X POST https://your-domain.com/api/logout
 - HTTPS 加密传输（通过 Nginx + Let's Encrypt）
 - 路径遍历防护（图片文件名严格校验）
 
-## 飞书 / Coze 集成
+## Coze / 扣子集成
 
-可作为扣子（Coze）自定义插件使用：
+可作为 Coze 自定义插件使用：
 
-```
-POST https://your-domain.com/api/upload
-Content-Type: multipart/form-data
-Body: image=@文件
-
-Response: {"success":true,"url":"https://your-domain.com/i/xxx.jpg","filename":"xxx.jpg"}
-```
-
-同时支持在飞书多维表格中通过插件调用，一列插入图片，一列自动返回 URL。
+| 参数 | 值 |
+|------|------|
+| 请求方法 | POST |
+| URL | `https://your-domain.com/api/upload` |
+| 传入方式 | Body |
+| 参数名 | `image` |
+| 类型 | String（传入图片 URL） |
 
 ## 许可证
 
