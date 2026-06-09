@@ -36,7 +36,7 @@ PORT=3000
 UPLOAD_DIR=./uploads
 
 # 最大文件大小 (MB)
-MAX_FILE_SIZE_MB=10
+MAX_FILE_SIZE_MB=50
 
 # 服务器地址（返回的图片链接会以此开头）
 DOMAIN_URL=https://your-domain.com
@@ -303,7 +303,7 @@ pm2 restart chaldeas
 - 5 位随机文件名（62⁵ ≈ 9 亿种组合），防碰撞、防路径穿越
 - 上传频率限制，防止滥用
 - 管理页面密码保护（express-session 会话管理，24 小时过期）
-- 文件大小限制（默认 10MB，可配置）
+- 文件大小限制（默认 50MB，可配置）
 - 安全 HTTP 头（X-Content-Type-Options、X-Frame-Options 等）
 - HTTPS 加密传输（通过 Nginx + Let's Encrypt）
 - 路径遍历防护（图片文件名严格校验）

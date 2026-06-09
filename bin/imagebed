@@ -47,9 +47,9 @@ if (!stat.isFile()) {
   process.exit(1);
 }
 
-const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 if (stat.size > MAX_SIZE) {
-  console.error(`❌ 文件过大（最大 10MB）: ${(stat.size / 1024 / 1024).toFixed(1)}MB`);
+  console.error(`❌ 文件过大（最大 50MB）: ${(stat.size / 1024 / 1024).toFixed(1)}MB`);
   process.exit(1);
 }
 

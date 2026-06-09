@@ -19,9 +19,15 @@
   <main>
     <div class="upload-container">
       <div class="drop-zone" id="dropZone">
-        <p class="drop-zone-icon">图片</p>
+        <div class="drop-zone-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" focusable="false">
+            <path d="M22 46H18a12 12 0 0 1-1.8-23.9A17 17 0 0 1 48.6 25 10.5 10.5 0 0 1 47 46h-5" />
+            <path d="M32 46V27" />
+            <path d="M24 35l8-8 8 8" />
+          </svg>
+        </div>
         <p class="drop-zone-text">拖拽一张或多张图片到此处，或 <span class="browse-link">点击浏览</span></p>
-        <p class="drop-zone-hint">支持 JPG / PNG / GIF / WebP / SVG / BMP / TIFF，单张最大 10MB</p>
+        <p class="drop-zone-hint">支持 JPG / PNG / GIF / WebP / SVG / BMP / TIFF，单张最大 50MB</p>
         <input type="file" id="fileInput" accept="image/*" multiple hidden>
       </div>
 

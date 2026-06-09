@@ -103,9 +103,9 @@ function validateFile(file) {
     return false;
   }
 
-  const maxSize = 10 * 1024 * 1024;
+  const maxSize = 50 * 1024 * 1024;
   if (file.size > maxSize) {
-    showToast(`${file.name} 超过 10MB`);
+    showToast(`${file.name} 超过 50MB`);
     return false;
   }
 
