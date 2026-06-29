@@ -14,6 +14,7 @@ const result = document.getElementById('result');
 const resultCount = document.getElementById('resultCount');
 const resultList = document.getElementById('resultList');
 const copyUrlBtn = document.getElementById('copyUrlBtn');
+const copyArrayBtn = document.getElementById('copyArrayBtn');
 const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
 const copyHtmlBtn = document.getElementById('copyHtmlBtn');
 const resetBtn = document.getElementById('resetBtn');
@@ -71,6 +72,7 @@ function resetUploadView() {
   fileInput.value = '';
   previewGrid.innerHTML = '';
   resultList.innerHTML = '';
+  copyArrayBtn.hidden = true;
   dropZone.hidden = false;
   preview.hidden = true;
   result.hidden = true;
@@ -241,6 +243,7 @@ function renderResult(images) {
   progressBar.hidden = true;
   resultCount.textContent = `${images.length} 张图片已生成 URL`;
   resultList.innerHTML = '';
+  copyArrayBtn.hidden = images.length < 2;
 
   images.forEach((image, index) => {
     const item = document.createElement('div');
@@ -289,6 +292,10 @@ function renderResult(images) {
 // ============================
 copyUrlBtn.addEventListener('click', () => {
   copyText(uploadedImages.map((image) => image.url).join('\n'));
+});
+
+copyArrayBtn.addEventListener('click', () => {
+  copyText(JSON.stringify(uploadedImages.map((image) => image.url), null, 4));
 });
 
 copyMarkdownBtn.addEventListener('click', () => {
